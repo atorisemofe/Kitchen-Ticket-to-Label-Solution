@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kitchen Ticket Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>🍽 Kitchen Ticket Dashboard</h1>
+        <a href="/settings" class="btn">Settings</a>
+    </div>
+
+    <h2>Last 2 Printed Receipts</h2>
+
+    <div id="receiptContainer" class="receipt-grid">
+
+        {% if receipts %}
+            {% for r in receipts %}
+            <div class="receipt-card">
+                <div class="receipt-meta">
+                    <strong>ID:</strong> {{ r.id }}<br>
+                    <strong>Uploaded:</strong> {{ r.uploaded }}<br>
+                    <strong>Printed:</strong> {{ r.printed_at }}
+                </div>
+
+                <button class="print-btn"
+                        onclick="printReceipt('{{ r.id }}', this)">
+                    🖨 Print Kitchen Labels
+                </button>
+
+                <img src="{{ r.image_path }}" class="receipt-img">
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>No receipts printed yet.</p>
+        {% endif %}
+
+    </div>
+
+</div>
+
+<!-- ============================= -->
+<!-- LOADING OVERLAY -->
+<!-- ============================= -->
+
+<div id="loadingOverlay" class="overlay hidden">
+    <div class="spinner"></div>
+    <p id="progressText">Processing...</p>
+</div>
+
+<!-- ============================= -->
+<!-- TOAST NOTIFICATION -->
+<!-- ============================= -->
+
+<div id="toast" class="toast"></div>
+
+<script>
+
+async function printReceipt(receiptId, button) {
+
+    button.disabled = true;
+
+    showLoading(true);
+    updateProgress("Parsing receipt...");
+
+    try {
+
+        const response = await fetch(`/print_receipt/${receiptId}`, {
+            method: "POST"
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            updateProgress("Sending to printer...");
+            showToast(
+                `✅ Printed successfully! Job ID: ${data.job_id}`,
+                "success"
+            );
+        } else {
+            showToast(`❌ ${data.message}`, "error");
+        }
+
+    } catch (err) {
+        showToast("❌ Network error.", "error");
+    }
+
+    showLoading(false);
+    button.disabled = false;
+}
+
+function showLoading(show) {
+    const overlay = document.getElementById("loadingOverlay");
+    overlay.classList.toggle("hidden", !show);
+}
+
+function updateProgress(text) {
+    document.getElementById("progressText").innerText = text;
+}
+
+function showToast(message, type) {
+    const toast = document.getElementById("toast");
+
+    toast.innerText = message;
+    toast.className = `toast ${type} show`;
+
+    setTimeout(() => {
+        toast.classList.remove("show");
+    }, 3000);
+}
+
+/* ✅ Auto-refresh every 10 seconds using local API */
+async function refreshReceipts() {
+
+    try {
+        const response = await fetch("/api/latest_receipts");
+        const data = await response.json();
+
+        const container = document.getElementById("receiptContainer");
+
+        container.innerHTML = "";
+
+        if (!data.receipts.length) {
+            container.innerHTML = "<p>No receipts printed yet.</p>";
+            return;
+        }
+
+        data.receipts.forEach(r => {
+
+            const card = document.createElement("div");
+            card.className = "receipt-card";
+
+            card.innerHTML = `
+                <div class="receipt-meta">
+                    <strong>ID:</strong> ${r.id}<br>
+                    <strong>Uploaded:</strong> ${r.uploaded}<br>
+                    <strong>Printed:</strong> ${r.printed_at}
+                </div>
+
+                <button class="print-btn"
+                        onclick="printReceipt('${r.id}', this)">
+                    🖨 Print Kitchen Labels
+                </button>
+
+                <img src="${r.image_path}" class="receipt-img">
+            `;
+
+            container.appendChild(card);
+        });
+
+    } catch (err) {
+        console.log("Refresh error:", err);
+    }
+}
+
+setInterval(refreshReceipts, 10000);
+
+</script>
+
+</body>
+</html>

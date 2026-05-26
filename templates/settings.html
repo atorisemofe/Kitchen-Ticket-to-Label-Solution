@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Printer Settings</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="container">
+
+    {% if success %}
+    <div class="toast success-toast" id="successToast">
+        ✅ Settings saved successfully!
+    </div>
+    {% endif %}
+
+    <!-- <div class="header">
+        <h1>⚙️ Printer Settings</h1>
+        <a href="/" class="btn">Dashboard</a>
+        <button onclick="toggleDarkMode()" class="btn dark-toggle">🌙</button>
+    </div> -->
+    <div class="header">
+        <div>
+            <h1>⚙️ Printer Settings</h1>
+            <!-- <p class="user-info">Logged in as: {{ user_name }}</p> -->
+        </div>
+
+        <div>
+            <a href="/" class="btn">Dashboard</a>
+            <button onclick="toggleDarkMode()" class="btn dark-toggle">🌙</button>
+            <a href="/logout" class="btn logout-btn">Logout</a>
+        </div>
+    </div>
+
+    <!-- ============================= -->
+    <!-- CURRENT SELECTION BANNER -->
+    <!-- ============================= -->
+
+    <div class="selection-banner">
+
+        {% if selected_receipt and selected_kitchen %}
+            <div class="banner success">
+                ✅ Receipt Printer:
+                <strong>{{ selected_receipt.device_name }}</strong>
+                &nbsp; | &nbsp;
+                ✅ Kitchen Printer:
+                <strong>{{ selected_kitchen.ClientType }}</strong>
+            </div>
+
+        {% else %}
+            <div class="banner warning">
+                ⚠️ No printer selected.
+                Please select both a receipt printer and a kitchen printer.
+            </div>
+        {% endif %}
+
+    </div>
+
+    <form method="POST">
+
+        <!-- ============================= -->
+        <!-- RECEIPT PRINTERS -->
+        <!-- ============================= -->
+
+        <h2>Receipt Printers</h2>
+        <div class="device-grid" id="receipt-section">
+            {% for d in receipt_devices %}
+            <div class="device-card
+                {% if saved.get('receipt_printer') and saved.get('receipt_printer') == d.device_id %} selected {% endif %}"
+                data-id="{{ d.device_id }}">
+
+                <!-- {% if d.image_url %}
+                    <img src="{{ d.image_url }}" class="device-img">
+                {% endif %} -->
+                <img src="{{ d.image_url }}" class="device-img">
+
+                <div class="device-info">
+                    <h3>{{ d.device_name }}</h3>
+                    <p>Serial: {{ d.serial_number }}</p>
+                    <p>Type: {{ d.product_type }}</p>
+
+                    <!-- {% if d.active %}
+                        <span class="badge online">Active</span>
+                    {% else %}
+                        <span class="badge offline">Inactive</span>
+                    {% endif %} -->
+                </div>
+
+                <button type="button"
+                        class="select-btn"
+                        onclick="selectDevice('receipt', '{{ d.device_id }}')">
+                    {% if saved.get('receipt_printer') and saved.get('receipt_printer') == d.device_id %}
+                        Selected
+                    {% else %}
+                        Select
+                    {% endif %}
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+
+        <input type="hidden"
+               name="receipt_printer"
+               id="receipt_printer"
+               value="{{ saved.get('receipt_printer', '') }}">
+
+        <!-- ============================= -->
+        <!-- KITCHEN PRINTERS -->
+        <!-- ============================= -->
+
+        <h2>Kitchen Printers</h2>
+        <div class="device-grid" id="kitchen-section">
+            {% for d in kitchen_devices %}
+            <div class="device-card
+                {% if saved.get('kitchen_printer') and saved.get('kitchen_printer') == d.AccessIdentifier %} selected {% endif %}"
+                data-id="{{ d.AccessIdentifier }}">
+
+                <img src="{{ d.image_url }}" class="device-img">
+
+                <div class="device-info">
+                    <h3>{{ d.ClientType }}</h3>
+                    <p>Serial: {{ d.SerialNumber }}</p>
+
+                    {% if d.Online %}
+                        <span class="badge online">Online</span>
+                    {% else %}
+                        <span class="badge offline">Offline</span>
+                    {% endif %}
+
+                    {% if d.PaperEmpty %}
+                        <span class="badge danger">Paper Empty</span>
+                    {% elif d.PaperLow %}
+                        <span class="badge warning">Paper Low</span>
+                    {% else %}
+                        <span class="badge online">Paper OK</span>
+                    {% endif %}
+                </div>
+
+                <button type="button"
+                        class="select-btn"
+                        onclick="selectDevice('kitchen', '{{ d.AccessIdentifier }}')">
+                    {% if saved.get('kitchen_printer') and saved.get('kitchen_printer') == d.AccessIdentifier %}
+                        Selected
+                    {% else %}
+                        Select
+                    {% endif %}
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+
+        <input type="hidden"
+               name="kitchen_printer"
+               id="kitchen_printer"
+               value="{{ saved.get('kitchen_printer', '') }}">
+
+        <br><br>
+        <!-- <button type="submit" class="save-btn">Save Settings</button> -->
+         <button type="submit"
+                class="save-btn"
+                id="saveBtn"
+                disabled>
+            Save Settings
+        </button>
+
+    </form>
+
+</div>
+
+<!-- <script>
+function selectDevice(type, id) {
+
+    const section = document.getElementById(type + "-section");
+    const cards = section.querySelectorAll(".device-card");
+
+    cards.forEach(card => {
+        card.classList.remove("selected");
+        card.querySelector(".select-btn").innerText = "Select";
+    });
+
+    const selectedCard = section.querySelector(`[data-id="${id}"]`);
+    selectedCard.classList.add("selected");
+    selectedCard.querySelector(".select-btn").innerText = "Selected";
+
+    document.getElementById(type + "_printer").value = id;
+}
+
+function toggleDarkMode() {
+    document.body.classList.toggle("dark");
+}
+</script> -->
+<script>
+function selectDevice(type, id) {
+
+    const section = document.getElementById(type + "-section");
+    const cards = section.querySelectorAll(".device-card");
+
+    cards.forEach(card => {
+        card.classList.remove("selected");
+        card.querySelector(".select-btn").innerText = "Select";
+    });
+
+    const selectedCard = section.querySelector(`[data-id="${id}"]`);
+    selectedCard.classList.add("selected");
+    selectedCard.querySelector(".select-btn").innerText = "Selected";
+
+    document.getElementById(type + "_printer").value = id;
+
+    validateSelections();
+}
+
+function validateSelections() {
+    const receipt = document.getElementById("receipt_printer").value;
+    const kitchen = document.getElementById("kitchen_printer").value;
+
+    const saveBtn = document.getElementById("saveBtn");
+
+    if (receipt && kitchen) {
+        saveBtn.disabled = false;
+    } else {
+        saveBtn.disabled = true;
+    }
+}
+
+// Run on page load
+window.onload = validateSelections;
+
+function toggleDarkMode() {
+    document.body.classList.toggle("dark");
+}
+</script>
+
+</body>
+</html>
