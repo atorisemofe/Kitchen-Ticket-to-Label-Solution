@@ -22,7 +22,6 @@ app.secret_key = "super-secret-key"
 # =========================
 
 CLIENT_ID = os.getenv("SMCS_CLIENT_ID")
-DEVICE_ID = os.getenv("SMCS_DEVICE_ID")
 AUTH_URL = os.getenv("AUTH_URL")
 TOKEN_URL = os.getenv("TOKEN_URL")
 SCOPES = os.getenv("SCOPES").split(",")
