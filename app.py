@@ -113,76 +113,76 @@ def get_printer_image(model_name):
     # Default fallback
     return "/static/images/printers/mC-Print3.webp"
 
-# ====================================================
-# LLM PARSING
-# ====================================================
+# # ====================================================
+# # LLM PARSING
+# # ====================================================
 
-def parse_receipt_with_llm(image_path, retries=3):
+# def parse_receipt_with_llm(image_path, retries=3):
 
-    for attempt in range(retries):
+#     for attempt in range(retries):
 
-        try:
-            with open(image_path, "rb") as f:
-                image_bytes = f.read()
+#         try:
+#             with open(image_path, "rb") as f:
+#                 image_bytes = f.read()
 
-            base64_image = base64.b64encode(image_bytes).decode("utf-8")
+#             base64_image = base64.b64encode(image_bytes).decode("utf-8")
 
-            prompt = """
-                    Extract structured food orders from this receipt.
-                    Return ONLY valid JSON in this format:
+#             prompt = """
+#                     Extract structured food orders from this receipt.
+#                     Return ONLY valid JSON in this format:
 
-                    [
-                    {
-                        "customer": "Tom",
-                        "order_number": "123",
-                        "pickup_time": "6:45 PM",
-                        "quantity": 1,
-                        "item": "Basket Boneless Wings",
-                        "modifiers": ["Buffalo", "Bleu Cheese"]
-                    }
-                    ]
+#                     [
+#                     {
+#                         "customer": "Tom",
+#                         "order_number": "123",
+#                         "pickup_time": "6:45 PM",
+#                         "quantity": 1,
+#                         "item": "Basket Boneless Wings",
+#                         "modifiers": ["Buffalo", "Bleu Cheese"]
+#                     }
+#                     ]
 
-                    Do not include totals or addresses.
-                    If quantity missing assume 1.
-                    Return JSON only.
-                    """
+#                     Do not include totals or addresses.
+#                     If quantity missing assume 1.
+#                     Return JSON only.
+#                     """
 
-            headers = {
-                "Authorization": f"Bearer {OPENWEBUI_TOKEN}",
-                "Content-Type": "application/json"
-            }
+#             headers = {
+#                 "Authorization": f"Bearer {OPENWEBUI_TOKEN}",
+#                 "Content-Type": "application/json"
+#             }
 
-            data = {
-                "model": MODEL_NAME,
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": prompt},
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/png;base64,{base64_image}"
-                                }
-                            }
-                        ]
-                    }
-                ],
-            }
+#             data = {
+#                 "model": MODEL_NAME,
+#                 "messages": [
+#                     {
+#                         "role": "user",
+#                         "content": [
+#                             {"type": "text", "text": prompt},
+#                             {
+#                                 "type": "image_url",
+#                                 "image_url": {
+#                                     "url": f"data:image/png;base64,{base64_image}"
+#                                 }
+#                             }
+#                         ]
+#                     }
+#                 ],
+#             }
 
-            response = requests.post(OPENWEBUI_URL, headers=headers, json=data)
+#             response = requests.post(OPENWEBUI_URL, headers=headers, json=data)
 
-            if response.status_code != 200:
-                raise Exception(f"LLM Error: {response.text}")
+#             if response.status_code != 200:
+#                 raise Exception(f"LLM Error: {response.text}")
 
-            content = response.json()["choices"][0]["message"]["content"]
-            return json.loads(content)
+#             content = response.json()["choices"][0]["message"]["content"]
+#             return json.loads(content)
         
-        except Exception as e:
-            print(f"LLM attempt {attempt+1} failed:", e)
-            time.sleep(2 ** attempt)
+#         except Exception as e:
+#             print(f"LLM attempt {attempt+1} failed:", e)
+#             time.sleep(2 ** attempt)
     
-    raise Exception("LLM failed after retries")
+#     raise Exception("LLM failed after retries")
 
 # ====================================================
 # STAR MARKUP
@@ -526,7 +526,7 @@ def print_receipt(receipt_id):
 
     try:
         # Step 1: Parse
-        parsed_items = parse_receipt_with_llm(image_path)
+        parsed_items = parse_receipt_with_openai(image_path)
 
         # Step 2: Generate Markup
         markup = generate_star_markup(parsed_items)
