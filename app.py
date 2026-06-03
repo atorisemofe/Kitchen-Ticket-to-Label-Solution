@@ -10,6 +10,7 @@ import time
 from flask import Flask, redirect, session, request, render_template, url_for
 from dotenv import load_dotenv
 from smcs_oauth_client import SMCSOAuthClient
+from llm_parser import parse_receipt_with_openai
 
 load_dotenv()
 
@@ -372,7 +373,12 @@ def check_and_auto_print():
             save_printed_receipts(printed_receipts)
 
             # ✅ Now do slow work
-            parsed_items = parse_receipt_with_llm(image_path)
+            # parsed_items = parse_receipt_with_llm(image_path)
+            try:
+                parsed_items = parse_receipt_with_openai(image_path)
+            except Exception as e:
+                print("LLM parsing failed:", e)
+                return
             markup = generate_star_markup(parsed_items)
             result = send_print_job(markup, kitchen_printer_id)
 
