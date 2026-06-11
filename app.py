@@ -343,22 +343,6 @@ def check_and_auto_print():
             with open(image_path, "wb") as f:
                 f.write(image_response.content)
 
-            # # ✅ Parse & print
-            # parsed_items = parse_receipt_with_llm(image_path)
-            # markup = generate_star_markup(parsed_items)
-
-            # result = send_print_job(markup, kitchen_printer_id)
-
-            # # ✅ Store metadata
-            # printed_receipts.append({
-            #     "receipt_printer_id": receipt_printer_id,
-            #     "id": receipt_id,
-            #     "uploaded": uploaded,
-            #     "printed_at": datetime.utcnow().isoformat() + "Z",
-            #     "job_id": result.get("JobId")
-            # })
-
-            # save_printed_receipts(printed_receipts)
             # ✅ Immediately mark as processing
             printed_receipts.append({
                 "receipt_printer_id": receipt_printer_id,
@@ -372,7 +356,6 @@ def check_and_auto_print():
             save_printed_receipts(printed_receipts)
 
             # ✅ Now do slow work
-            # parsed_items = parse_receipt_with_llm(image_path)
             try:
                 parsed_items = parse_receipt_with_openai(image_path)
             except Exception as e:
@@ -414,9 +397,6 @@ def index():
         session.clear()
         return redirect(url_for("login"))
 
-    # printed_receipts = load_printed_receipts()
-
-    # latest_two = printed_receipts[-2:][::-1]
     printed_receipts = load_printed_receipts()
 
     settings = load_settings()
@@ -445,9 +425,6 @@ def index():
 @app.route("/api/latest_receipts")
 def api_latest_receipts():
 
-    # printed_receipts = load_printed_receipts()
-
-    # latest_two = printed_receipts[-2:][::-1]
     printed_receipts = load_printed_receipts()
 
     settings = load_settings()
@@ -609,7 +586,6 @@ def settings():
                     "device_name": d.get("device_name"),
                     "product_type": d.get("product_type"),
                     "serial_number": d.get("serial_number"),
-                    # "image_url": d.get("image_url"),
                     "image_url": get_printer_image(d.get("product_type")),
                     "active": d.get("active"),
                     "owned": d.get("owned"),
